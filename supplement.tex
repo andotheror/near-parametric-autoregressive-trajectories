@@ -1,0 +1,355 @@
+\documentclass[twoside]{article}
+\usepackage[preprint]{aistats2027}
+\usepackage[round,authoryear]{natbib}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{url}
+\renewcommand{\bibname}{References}
+\renewcommand{\bibsection}{\subsubsection*{\bibname}}
+\bibliographystyle{apalike}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{definition}[theorem]{Definition}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\Q}{\mathcal Q}
+\newcommand{\A}{\mathcal A}
+\newcommand{\R}{\mathbb R}
+\newcommand{\h}{\mathsf h}
+\newcommand{\TV}{\mathsf{TV}}
+\newcommand{\Pdim}{\operatorname{Pdim}}
+\begin{document}
+\runningauthor{}
+\twocolumn[
+\aistatstitle{Supplement: Near-Parametric Learning of Autoregressive Trajectories}
+\aistatsauthor{Pahan Dewasurendra}
+\aistatsaddress{Johns Hopkins University}
+]
+
+\appendix
+\section{The Conditional $\rho$ Specialization}
+\label{app:rho}
+
+We give the reduction from the general results of \citet{baraud2018} to the unknown-design conditional $\rho$ theorem in the main paper. This also verifies that the unknown prompt marginal is absent from the algorithm.
+
+Let $\mathcal X$ be a measurable prompt space, $\mathcal Z$ a finite trajectory space, and $\lambda$ counting measure on $\mathcal Z$. Let $\mu$ be the unknown prompt marginal. A conditional density $q$ is a measurable nonnegative function on $\mathcal X\times\mathcal Z$ satisfying $\sum_zq(z\mid x)=1$ for every $x$. It induces a joint probability
+\[
+ Q_q(dx,dz)=\mu(dx)q(z\mid x).
+\]
+The true joint probability has the disintegration $P(dx,dz)=\mu(dx)P_x(dz)$.
+
+\begin{lemma}[Conditional Hellinger identity]
+\label{lem:conditional-h}
+For every conditional density $q$,
+\[
+ \h^2(P,Q_q)=\int_{\mathcal X}\h^2(P_x,q(\cdot\mid x))\,d\mu(x).
+\]
+\end{lemma}
+
+\begin{proof}
+Both probabilities are dominated by $\mu\otimes\lambda$. Expanding the definition and applying Tonelli gives
+\begin{align*}
+ \h^2(P,Q_q)
+ &=\frac12\int\sum_z
+ \left(\sqrt{P_x(z)}-\sqrt{q(z\mid x)}\right)^2d\mu(x)\\
+ &=\int\h^2(P_x,q(\cdot\mid x))d\mu(x).
+\end{align*}
+\end{proof}
+
+For $n$ independent observations, \citet{baraud2018} use the Hellinger-type distance that sums the $n$ marginal squared distances. Thus their product-space loss is $n\h^2(P,Q_q)$. Their Proposition 7 bounds the $\rho$-dimension of a VC-subgraph density class by
+\begin{equation}
+ D_n\leq C_0(V\wedge n)\left[1+\log_+(n/V)\right].
+ \label{eq:rho-dimension}
+\end{equation}
+Their high-probability single-model inequality, stated in Equation (20) and normalized for i.i.d. density estimation in their Equation (29), then gives
+\begin{equation}
+ \h^2(P,Q_{\widehat q})
+ \leq C_1\left[
+ \inf_{q\in\Q}\h^2(P,Q_q)+\frac{D_n+\xi}{n}
+ \right]
+ \label{eq:source-rho}
+\end{equation}
+with probability at least $1-e^{-\xi}$. Their Section 8 proves that the same estimator applies to conditional densities without knowing $\mu$.
+
+To see this directly, every candidate joint density relative to $\mu\otimes\lambda$ is $q(z\mid x)$. For two candidates,
+\[
+ \frac{dQ_{q'}}{dQ_q}(x,z)=\frac{q'(z\mid x)}{q(z\mid x)}.
+\]
+The prompt density cancels. Taking $\psi(r)=(r-1)/(r+1)$, the empirical comparison statistic is exactly
+\[
+ T_n(q,q')=\sum_{i=1}^n\psi\!\left(
+ \sqrt{\frac{q'(Z_i\mid X_i)}{q(Z_i\mid X_i)}}
+ \right).
+\]
+It can be evaluated from the sample and the candidate conditional densities alone.
+
+\begin{proof}[Proof of the unknown-design conditional $\rho$ theorem]
+Apply \eqref{eq:source-rho} and \eqref{eq:rho-dimension}, take $\xi=\log(1/\delta)$, and use Lemma~\ref{lem:conditional-h}. Proposition 8 of \citet{baraud2018} preserves the VC-subgraph index when passing from one-observation densities to their i.i.d. product representation. Their Theorem 3 permits a universally separable uncountable density class by reducing it to a fixed countable pointwise-dense subclass. This proves the displayed oracle inequality.
+
+We finally verify the last proper-selection statement. Enumerate the countable subclass as $(q_j)_{j\geq1}$. Every $T_n(q_j,q_k)$ is measurable, and so are the countable supremum over $k$ and infimum over $j$. The approximate minimizer set in Definition 3 of \citet{baraud2018} is nonempty. Selecting its first element in the enumeration is measurable and is itself a $\rho$-estimator. It lies in the candidate subclass rather than only its Hellinger closure.
+\end{proof}
+
+\begin{lemma}[Solving the fixed-point rate]
+\label{lem:fixed-point}
+Let $V\geq1$, $\epsilon\in(0,1)$, and
+\[
+ n\geq\frac{C}{\epsilon}\left[V\log(C/\epsilon)+\log(1/\delta)\right]
+\]
+for a sufficiently large universal $C$. Then
+\[
+ \frac{(V\wedge n)[1+\log_+(n/V)]+\log(1/\delta)}{n}
+ \leq c\epsilon
+\]
+for any prescribed universal $c>0$ after increasing $C$.
+\end{lemma}
+
+\begin{proof}
+For sufficiently large $C$, the assumed inequality implies $n>V$. Put $r=n/V>1$. Dropping the nonnegative confidence term from the sample-size lower bound gives $r\geq C\epsilon^{-1}\log(C/\epsilon)$. Since $(1+\log r)/r$ is decreasing for $r\geq1$, substitution at this lower endpoint bounds it by $c\epsilon$ after increasing $C$. The confidence term is controlled directly by the second summand in the sample-size lower bound.
+\end{proof}
+
+\section{Algebraic Trajectory Complexity}
+\label{app:algebra}
+
+We record two variants of the trajectory-closure calculation.
+
+\begin{lemma}[Pairwise ratio subgraphs]
+\label{lem:ratio-vc}
+Under the complexity-$(p,\Delta)$ assumption, if every transition probability is strictly positive, the class
+\[
+ \left\{(x,z,r):\frac{q_\theta(z\mid x)}{q_{\theta'}(z\mid x)}>r\right\},
+ \qquad \theta,\theta'\in\Theta,
+\]
+has VC dimension less than
+\[
+ 4p\log_2(16eM\Delta).
+\]
+\end{lemma}
+
+\begin{proof}
+Write $q_\theta=N_\theta/D_\theta$, where both trajectory polynomials have degree at most $M\Delta$. The ratio test is
+\[
+ N_\theta D_{\theta'}-rD_\theta N_{\theta'}>0.
+\]
+This is one polynomial inequality of degree at most $2M\Delta$ in the $2p$ parameters $(\theta,\theta')$. Applying Warren's sign-pattern bound exactly as in the proof of the trajectory-closure theorem gives the stated bound.
+\end{proof}
+
+This lemma explains directly why pairwise trajectory comparisons remain simple. The density-subgraph bound in the main paper is sharper and is the exact hypothesis used by Proposition 7 of \citet{baraud2018}.
+
+\begin{lemma}[Observed bounded stopping]
+\label{lem:stopping}
+Suppose generation stops according to any rule whose decision at time $t$ is a deterministic function of the observed prefix and whose stopping time is at most $M$. If the stopped path includes its length, the stopped-trajectory density class obeys the same pseudo-dimension bound as the trajectory-closure theorem.
+\end{lemma}
+
+\begin{proof}
+For a fixed stopped observation $(m,z_{1:m})$, the event that the stopping rule accepts this length is determined by $(x,z_{1:m})$ and introduces no parameter inequality. Its density is the product of the first $m\leq M$ transition probabilities, possibly multiplied by a fixed indicator. The proof of the trajectory-closure theorem applies with degree at most $m\Delta$.
+\end{proof}
+
+\subsection{Binary logistic delay line}
+
+For a fixed path, let $Y_t=\operatorname{tail}_d(xz_{<t})$ and set $u^y=\prod_ju_j^{y_j}$. The complete density has the explicit form
+\begin{equation}
+ q_u(z\mid x)=
+ \frac{\prod_{t:z_t=1}u^{Y_t}}
+ {\prod_{t=1}^M(1+u^{Y_t})}.
+ \label{eq:explicit-logistic-path}
+\end{equation}
+The numerator degree is at most $Md$, and the denominator degree is at most $Md$. No common denominator across unobserved paths is used.
+
+The positive rational vectors $u\in\mathbb Q_{>0}^d$ are pointwise dense in $(0,\infty)^d$. For every fixed path, \eqref{eq:explicit-logistic-path} is continuous in $u$. Thus the universal-separability condition and the proper-selection step in the unknown-design conditional $\rho$ theorem both hold.
+
+\subsection{Multiclass softmax}
+
+Let token zero be the reference class. For $a\in\{1,\ldots,K-1\}$ and binary feature $y\in\{0,1\}^d$, define $u_a^y=\prod_{j=1}^du_{a,j}^{y_j}$. The conditional probabilities are
+\begin{align*}
+ g_u(a\mid y)&=\frac{u_a^y}{1+\sum_{b=1}^{K-1}u_b^y},\\
+ g_u(0\mid y)&=\frac1{1+\sum_{b=1}^{K-1}u_b^y}.
+\end{align*}
+Each numerator and denominator has degree at most $d$ in $p=(K-1)d$ positive parameters. The trajectory-closure theorem therefore gives
+\[
+ V<2(K-1)d\log_2(8eMd).
+\]
+The bound changes only through the free parameter count when the state feature is any fixed binary map.
+
+\section{Loss Conversions}
+\label{app:loss}
+
+\begin{lemma}[Coarsening and final-token loss]
+\label{lem:coarsening}
+Let $P,Q$ be probabilities on $\A^M$ and let $\phi$ be any measurable statistic. Then
+\[
+ \h^2(P\circ\phi^{-1},Q\circ\phi^{-1})\leq\h^2(P,Q).
+\]
+For binary final-token probabilities $p$ and $q$,
+\[
+ (p-q)^2\leq2\h^2(\operatorname{Bern}(p),\operatorname{Bern}(q)).
+\]
+Also $\TV(P,Q)\leq\sqrt2\h(P,Q)$.
+\end{lemma}
+
+\begin{proof}
+The first claim is the data-processing inequality for Hellinger distance. It also follows from Cauchy--Schwarz after grouping the summands over each fiber of $\phi$. The remaining claims are the standard inequalities $\TV^2\leq2\h^2$ and $\TV\leq\sqrt2\h$ under the normalization used here.
+\end{proof}
+
+Applying Lemma~\ref{lem:coarsening} pointwise in $X$ proves the final-token claim in the near-parametric stochastic logistic CoT theorem. For trajectory sampling,
+\begin{align*}
+ \E_X\TV(P_X,Q_X)
+ &\leq\sqrt2\E_X\h(P_X,Q_X)\\
+ &\leq\sqrt{2\E_X\h^2(P_X,Q_X)}.
+\end{align*}
+Thus integrated squared Hellinger error $\epsilon^2/2$ implies expected trajectory total variation at most $\epsilon$.
+
+\section{Minimax Lower Bound}
+\label{app:lower}
+
+We prove the minimax parameter lower-bound theorem in full. The argument applies to every output predictor, whether or not it corresponds to a logistic generator.
+
+\begin{proof}[Proof of the minimax parameter lower bound]
+First assume $d\geq8$. Let the prompt space contain $x_1,\ldots,x_d$ with $\operatorname{tail}_d(x_j)=e_j$, and let $X$ be uniform on these prompts. By the Varshamov--Gilbert bound, there is $\Omega\subseteq\{-1,+1\}^d$ with
+\[
+ \log|\Omega|\geq c_1d,
+ \qquad
+ d_H(\omega,\omega')\geq d/4
+\]
+for distinct $\omega,\omega'\in\Omega$.
+
+Fix $\alpha\in(0,1/4]$ and let
+\[
+ \gamma=\log\frac{1/2+\alpha}{1/2-\alpha}.
+\]
+For $\omega\in\Omega$, set $w^\omega_j=\gamma\omega_j$. At horizon one,
+\[
+ f_\omega(x_j)=\sigma(w^\omega_j)=\frac12+\alpha\omega_j.
+\]
+Consequently,
+\begin{equation}
+ \|f_\omega-f_{\omega'}\|_{L_2(\mu)}^2
+ =\frac{4\alpha^2}{d}d_H(\omega,\omega')
+ \geq\alpha^2.
+ \label{eq:packing-separation}
+\end{equation}
+
+Let $P_\omega$ be the law of one pair $(X,Z_1)$ under this target. For Bernoulli parameters in $[1/4,3/4]$,
+\[
+ \operatorname{KL}(\operatorname{Bern}(p)\|\operatorname{Bern}(q))
+ \leq\frac{(p-q)^2}{q(1-q)}\leq22\alpha^2
+\]
+when $p,q\in\{1/2-\alpha,1/2+\alpha\}$. Averaging over the prompt gives
+\begin{equation}
+ \operatorname{KL}(P_\omega\|P_{\omega'})\leq22\alpha^2.
+ \label{eq:packing-kl}
+\end{equation}
+
+Take $\alpha^2=16\epsilon$, with $\epsilon\leq1/256$. If an estimator $\widehat f$ has squared $L_2(\mu)$ error at most $\epsilon$, then its nearest element of $\{f_\omega:\omega\in\Omega\}$ is the true $f_\omega$. Indeed, the distance to the truth is at most $\sqrt\epsilon$, while \eqref{eq:packing-separation} gives pairwise distance at least $4\sqrt\epsilon$. Fano's inequality and \eqref{eq:packing-kl} show that this decoding succeeds with probability at most $2/3$ whenever $n\leq c_2d/\epsilon$. Hence no learner can guarantee error at most $\epsilon$ with success probability $3/4$ in this range.
+
+For $d<8$, the same order up to a universal constant follows from the two hypotheses at one coordinate below. It remains to obtain the confidence dependence. Use one prompt and two targets with probabilities $1/2\pm\alpha$, now taking $\alpha=2\sqrt\epsilon$. An estimate with squared error at most $\epsilon$ identifies the sign. The sum of the two testing errors is at least
+\[
+ \begin{aligned}
+ &\frac12\exp\left[-n\operatorname{KL}\left(
+ \operatorname{Bern}(1/2+\alpha)\|\operatorname{Bern}(1/2-\alpha)
+ \right)\right]\\
+ &\hspace{28mm}\geq\frac12e^{-C n\epsilon}.
+ \end{aligned}
+\]
+by the Bretagnolle--Huber inequality. Making both errors at most $\delta$ requires $n\geq c_3\log(1/\delta)/\epsilon$. Taking the larger of the dimension and confidence lower bounds, then changing the universal constant, proves the stated lower bound.
+\end{proof}
+
+\section{Sparse Model Selection}
+\label{app:sparse}
+
+For $S\subseteq[d]$, let $\Q_S$ be the logistic trajectory family with $w_j=0$ for $j\notin S$. Put $s=|S|$ and
+\[
+ V_s=\left\lceil2(s\vee1)\log_2(8eM(s\vee1))\right\rceil.
+\]
+The harmless use of $s\vee1$ includes the all-zero model.
+
+Choose model weights
+\begin{equation}
+ \Delta(S)=\log\binom d{|S|}+2\log(|S|+1)+\log(\pi^2/6).
+ \label{eq:support-penalty}
+\end{equation}
+They satisfy
+\[
+ \sum_{S\subseteq[d]}e^{-\Delta(S)}
+ =\frac6{\pi^2}\sum_{s=0}^d\frac1{(s+1)^2}\leq1.
+\]
+
+\begin{theorem}[Sparse trajectory oracle]
+\label{thm:sparse-full}
+There is one penalized conditional $\rho$-estimator such that, with probability at least $1-\delta$,
+\begin{align*}
+ \E_X\h^2(P_X,\widehat q_X)
+ \leq C\inf_{S\subseteq[d]}\bigg\{&\inf_{q\in\Q_S}\E_X\h^2(P_X,q_X)\\
+ &+\frac{V_s[1+\log_+(n/V_s)]}{n}\\
+ &+\frac{\Delta(S)+\log(1/\delta)}{n}\bigg\}.
+\end{align*}
+\end{theorem}
+
+\begin{proof}
+Each fixed-support class is universally separable and has pseudo-dimension at most $V_s$ by the trajectory-closure theorem. Apply the penalized model-selection theorem of \citet[Theorem 2]{baraud2018} with the Kraft weights \eqref{eq:support-penalty}. Its model complexity is bounded by Proposition 7 as in \eqref{eq:rho-dimension}. Divide the product-space Hellinger loss by $n$ and apply Lemma~\ref{lem:conditional-h}.
+\end{proof}
+
+If the truth has support size $s$, use $\Delta(S)\leq s\log(ed/s)+2\log(s+1)+C$. Lemma~\ref{lem:fixed-point} then yields the sparse rate displayed in the main paper up to secondary logarithms.
+
+\section{Misspecification and Contamination}
+\label{app:robustness}
+
+The approximation term in the unknown-design conditional $\rho$ theorem already proves the misspecified claim. We add details for Huber contamination because the contaminating distribution may alter the prompt marginal.
+
+Let $P$ be the clean joint law of a prompt and trajectory, and let
+\[
+ R=(1-\eta)P+\eta H
+\]
+be the observed law. Denote their prompt marginals by $\mu_P$ and $\mu_R$. Assume the clean conditional density is $q^\star\in\Q$. The candidate joint law used by the conditional estimator is
+\[
+ Q_R^\star(dx,dz)=\mu_R(dx)q^\star(z\mid x).
+\]
+Since $\TV(P,R)\leq\eta$ and marginalization contracts total variation,
+\begin{align*}
+ \h^2(P,R)&\leq\eta,\qquad
+ \h^2(\mu_P,\mu_R)\leq\eta,\\
+ \h^2(P,Q_R^\star)
+ &=\h^2(\mu_Pq^\star,\mu_Rq^\star)
+ =\h^2(\mu_P,\mu_R)\leq\eta.
+\end{align*}
+The squared triangle inequality gives $\h^2(R,Q_R^\star)\leq4\eta$. The unknown-design conditional $\rho$ theorem applied to the observed law therefore gives
+\[
+ \h^2(R,\mu_R\widehat q)\leq C(\eta+\mathfrak C_n)
+\]
+with high probability, where $\mathfrak C_n$ is the estimation term. Finally,
+\begin{align*}
+ \h(P,\mu_P\widehat q)
+ \leq{}&\h(P,R)+\h(R,\mu_R\widehat q)\\
+ &+\h(\mu_R\widehat q,\mu_P\widehat q),
+\end{align*}
+and the last term equals $\h(\mu_R,\mu_P)$. Squaring proves
+\[
+ \E_{X\sim\mu_P}\h^2(P_X,\widehat q_X)
+ \leq C'(\eta+\mathfrak C_n).
+\]
+This is the contamination statement in the main paper.
+
+\section{Why the e2e Calculation Differs}
+\label{app:e2e}
+
+For one observed CoT path, Equation~\eqref{eq:explicit-logistic-path} has one denominator product of degree at most $Md$. Under e2e supervision, the observed density is instead
+\[
+ q^{\mathrm{e2e}}_u(1\mid x)
+ =\sum_{z_{1:M}:z_M=1}q_u(z_{1:M}\mid x).
+\]
+The summands have path-dependent denominators. The proof of \citet[Lemma 12]{doron2026stochastic} clears them using
+\[
+ D(u)=\prod_{y\in\{0,1\}^d}(1+u^y)^M,
+\]
+whose degree is $Md2^{d-1}$. The Goldberg--Jerrum bound then becomes
+\[
+ O\!\left(d\log(Md2^d)\right)=O(d^2+d\log M).
+\]
+Our observed-path closure theorem does not change this sum-before-threshold operation. Any improvement for e2e supervision requires additional structure beyond the present algebraic argument.
+
+\bibliography{references}
+\end{document}

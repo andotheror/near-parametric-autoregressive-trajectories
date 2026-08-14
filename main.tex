@@ -1,0 +1,310 @@
+\documentclass[twoside]{article}
+\usepackage[preprint]{aistats2027}
+\usepackage[round,authoryear]{natbib}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{balance}
+\usepackage{url}
+\renewcommand{\bibname}{References}
+\renewcommand{\bibsection}{\subsubsection*{\bibname}}
+\bibliographystyle{apalike}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{definition}[theorem]{Definition}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\Q}{\mathcal Q}
+\newcommand{\A}{\mathcal A}
+\newcommand{\R}{\mathbb R}
+\newcommand{\h}{\mathsf h}
+\newcommand{\TV}{\mathsf{TV}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\Pdim}{\operatorname{Pdim}}
+\begin{document}
+\runningauthor{}
+\twocolumn[
+\aistatstitle{Near-Parametric Learning of Autoregressive Trajectories}
+\aistatsauthor{Pahan Dewasurendra}
+\aistatsaddress{Johns Hopkins University}
+]
+\begin{abstract}
+A length-$M$ autoregressive trajectory has $|\A|^M$ possible values, and generic conditional-density bounds can inherit this large response space. We show that shared algebraic parameters prevent this trajectory-alphabet explosion under full chain-of-thought supervision. If every next-token probability is a positive rational function of $p$ shared real parameters, with numerator and denominator degree at most $\Delta$, then the class of complete trajectory densities has pseudo-dimension at most $2p\log_2(8eM\Delta)$. Conditional $\rho$-estimation therefore gives a proper distribution-free learner with integrated squared-Hellinger error
+\[
+ O\!\left(\frac{p\log(2M\Delta)\log(en/p)}{n}
+ +\frac{\log(1/\delta)}{n}\right),
+\]
+without knowing the prompt distribution and without any lower bound on token probabilities. For the unrestricted $d$-dimensional logistic delay line introduced in recent stochastic autoregressive learning, this yields $\widetilde O((d+\log(1/\delta))/\epsilon)$ full trajectories for both final-token squared error and trajectory squared-Hellinger error. The previous bound was roughly $\widetilde O(d^2\log M/\epsilon)$, and obtaining the natural $d$-dimensional rate for arbitrary horizons was left open. A horizon-one packing proves $\Omega((d+\log(1/\delta))/\epsilon)$, so the parameter dependence is optimal up to logarithms. The same method gives constant-factor misspecification oracles, sparse adaptation, bounded-length stopping, and multiclass softmax rates linear in the number of free parameters. The argument does not improve end-to-end supervision, where unobserved paths must be summed before forming a density.
+\end{abstract}
+
+\section{Introduction}
+
+Autoregressive models reuse one next-token rule along a generated sequence. This parameter sharing creates a tension in statistical complexity. A complete trajectory has exponentially many possible values, yet its probability is a product of evaluations of the same local rule. Which description controls the number of independent trajectories needed to learn the generated distribution?
+
+This question is especially sharp in the stochastic PAC model of \citet{doron2026stochastic}. A prompt $X$ is followed by $M$ random binary tokens. Chain-of-thought (CoT) supervision reveals the complete trajectory, while end-to-end (e2e) supervision reveals only its last token. For the logistic delay-line class
+\begin{equation}
+ p_w(1\mid s)=\sigma\!\left(\langle w,\operatorname{tail}_d(s)\rangle\right),
+ \qquad w\in\R^d,
+ \label{eq:logistic-class}
+\end{equation}
+their proper efficient CoT learner and improper e2e learner both use roughly $\widetilde O(d^2\log M/\epsilon)$ trajectories. The one-step rate is $\widetilde O(d/\epsilon)$. Near-parametric trajectory-Hellinger rates were already known for bounded-norm linear softmax policies \citep{foster2024}. Those bounds depend on a uniform log-probability cover and do not apply to the unrestricted parameter set in \eqref{eq:logistic-class}. \citet{doron2026stochastic} explicitly ask whether the unrestricted autoregressive rate can be reduced to the natural $d$-dimensional rate for arbitrary $M$.
+
+We answer the CoT part affirmatively. The key object is not the class of local probabilities or the exponentially supported output vector. It is the scalar density of one observed path. After setting $u_j=e^{w_j}$, the probability of a fixed binary path is a rational function of $u\in(0,\infty)^d$. Its numerator and denominator have degree at most $Md$. A trajectory-density subgraph test is therefore one degree-$Md$ polynomial inequality in only $d$ parameters. The semialgebraic VC bound of \citet{goldberg1995} gives pseudo-dimension $O(d\log(Md))$.
+
+Low pseudo-dimension alone does not make ordinary bounded regression applicable because each response is a complete trajectory and the target is a conditional distribution. A generic empirical-entropy bound for conditional densities also contains a logarithmic dependence on the reference-density envelope and response mass \citep{bilodeau2023}. For $2^M$ trajectories, this can cost order $M$. Instead, we use conditional $\rho$-estimation \citep{baraud2018}. Its risk is controlled by the VC-subgraph dimension of the density class, not by the response support. Its pairwise statistic uses only candidate likelihood ratios, so an arbitrary unknown prompt marginal cancels exactly.
+
+\begin{table*}[t]
+\caption{Distribution-free rates with secondary logarithms suppressed. The e2e row receives only the final token during training.}
+\label{tab:rates}
+\centering
+\small
+\setlength{\tabcolsep}{9pt}
+\begin{tabular}{llll}
+\toprule
+Supervision & Parameter set & Output & Samples for squared error $\epsilon$ \\
+\midrule
+One step & $w\in\R^d$ & arbitrary & $\widetilde O(d/\epsilon)$ \\
+CoT \citep{foster2024} & $\|w\|_2\leq B$ & proper, efficient & $\widetilde O(d/\epsilon)$ \\
+e2e \citep{doron2026stochastic} & $w\in\R^d$ & improper & $\widetilde O(d^2\log M/\epsilon)$ \\
+CoT \citep{doron2026stochastic} & $w\in\R^d$ & proper, efficient & $\widetilde O(d^2\log M/\epsilon)$ \\
+CoT, this paper & $w\in\R^d$ & proper & $\widetilde O(d\log(Md)/\epsilon)$ \\
+CoT lower bound & $w\in\R^d$ & arbitrary & $\Omega(d/\epsilon)$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:rates} states the main comparison. The new learner is information-theoretic. It is proper, handles unrestricted weights, and controls the full trajectory law. It is not claimed to be computationally efficient. This distinction matters because the existing efficient proof compresses an arbitrary logistic parameter into a polynomial-bit box, and this step contributes the second factor of $d$.
+
+\paragraph{Contributions.} First, we give a general closure theorem: multiplying $M$ shared rational transition probabilities increases polynomial degree by $M$ but increases pseudo-dimension only logarithmically in $M$. Second, combining this theorem with unknown-design conditional $\rho$-estimation yields a high-probability Hellinger oracle inequality independent of $|\A|^M$. Third, we resolve the CoT half of the logistic open question and prove a matching $\Omega(d/\epsilon)$ lower bound. Fourth, penalized $\rho$-estimation adapts to unknown sparsity, and the rational closure theorem gives multiclass softmax and misspecified-model corollaries.
+
+\paragraph{Relation to prior work.} The deterministic autoregressive PAC model was introduced by \citet{joshi2025}. Recent work characterizes deterministic CoT and e2e learning through combinatorial dimensions and Transformer structure \citep{hanneke2026,li2026,yang2026}. Those labels and traces are deterministic. The stochastic model and the unrestricted logistic question studied here are due to \citet{doron2026stochastic}. \citet{xu2026} study trajectory-level KL under misspecification.
+
+The closest estimator is RhoEstimatorBC of \citet{rohatgi2025}. It applies $\rho$-estimation to a finite autoregressive policy class and obtains complexity $\log|\Pi|/n$. Both \citet{foster2024} and \citet{rohatgi2025} also obtain near-parametric realizable rates for bounded-norm autoregressive linear policies through uniform log-ratio covers. We instead analyze the trajectory-density VC class directly. This permits an infinite, unbounded shared-parameter family and also yields a constant-factor misspecification oracle. The underlying conditional $\rho$ theorem is due to \citet{baraud2018}, building on \citet{baraud2017}. Concurrently, \citet{compton2026} extend minimum-distance estimation from total variation to Hellinger through likelihood-ratio sets. Their theorem concerns ordinary density estimation. Applying its objective to conditional models with an unknown prompt marginal is not immediate because candidate probabilities of ratio sets depend on that marginal. Conditional $\rho$-estimation was designed to remove precisely this nuisance.
+
+\section{Conditional Trajectory Estimation}
+\label{sec:setup}
+
+Let $\mathcal X$ be an arbitrary measurable prompt space and let $\A$ be a finite alphabet. A generator $g$ assigns a distribution $g(\cdot\mid s)$ on $\A$ to every finite state string $s$. Starting from $x\in\mathcal X$, it generates $Z=(Z_1,\ldots,Z_M)\in\A^M$ autoregressively. Write
+\begin{equation}
+ q_g(z\mid x)=\prod_{t=1}^M g(z_t\mid xz_{<t})
+ \label{eq:path-density}
+\end{equation}
+for its conditional trajectory density with respect to counting measure on $\A^M$.
+
+We observe $n$ independent pairs $(X_i,Z_i)$. The prompt marginal $\mu$ is arbitrary and unknown. The true conditional trajectory law is $P_x$, which need not belong to the candidate family $\Q=\{q_\theta:\theta\in\Theta\}$. We use squared Hellinger distance normalized as
+\[
+ \h^2(P,Q)=\frac12\sum_z\bigl(\sqrt{P(z)}-\sqrt{Q(z)}\bigr)^2.
+\]
+The target loss is $\E_{X\sim\mu}\h^2(P_X,q_{\widehat\theta}(\cdot\mid X))$.
+
+For completeness, consider the bounded increasing function $\psi(r)=(r-1)/(r+1)$. On a countable candidate family define
+\begin{equation}
+ T_n(q,q')=\sum_{i=1}^n\psi\!\left(\sqrt{\frac{q'(Z_i\mid X_i)}{q(Z_i\mid X_i)}}\right).
+ \label{eq:rho-test}
+\end{equation}
+A $\rho$-estimator approximately minimizes $\sup_{q'\in\Q}T_n(q,q')$ over $q\in\Q$, within a fixed universal additive tolerance. Standard zero-density conventions apply. For the logistic application every finite-parameter density is positive.
+
+The joint candidate density relative to $\mu\otimes\operatorname{count}$ is $q(z\mid x)$. Although this reference measure contains unknown $\mu$, the statistic in \eqref{eq:rho-test} does not. The prompt marginal is common to every candidate and cancels from each ratio. This observation is formalized by the conditional-distribution construction of \citet[Section 8]{baraud2018}.
+
+\begin{theorem}[Unknown-design conditional $\rho$ bound]
+\label{thm:rho}
+Suppose $\Q$ is a universally separable VC-subgraph class of conditional densities with VC-subgraph index at most $V\geq1$, equivalently with pseudo-dimension at most $V-1$. There is an estimator $\widehat q$ based only on \eqref{eq:rho-test} such that, for every prompt marginal $\mu$, every true conditional law $P_x$, and every $\delta\in(0,1)$, with probability at least $1-\delta$,
+\begin{align}
+ \E_X\h^2(P_X,\widehat q_X)
+ \leq C\bigg\{&\inf_{q\in\Q}\E_X\h^2(P_X,q_X)\nonumber\\
+ &+\frac{(V\wedge n)[1+\log_+(n/V)]}{n}\nonumber\\
+ &+\frac{\log(1/\delta)}{n}\bigg\}.
+ \label{eq:rho-oracle}
+\end{align}
+Here $C$ is universal. If a pointwise-dense countable subclass is fixed in advance, the estimator may be selected from that subclass.
+\end{theorem}
+
+This is a direct specialization of the high-probability model bound and the conditional construction of \citet{baraud2018}. We state it to make the nuisance-marginal issue explicit. Universal separability means that a countable subclass approximates every density pointwise. Continuous finite-dimensional parameterizations have this property under mild domain assumptions.
+
+\section{Shared Rational Parameters}
+\label{sec:rational}
+
+We now bound the only model-dependent quantity in Theorem~\ref{thm:rho}.
+
+\begin{definition}[Rational transition family]
+\label{def:rational}
+A generator family has complexity $(p,\Delta)$, for positive integers $p$ and $\Delta$, if there is an injective parameterization by a domain $\Theta\subseteq\R^p$ such that, for every state $s$ and token $a$,
+\[
+ g_\theta(a\mid s)=\frac{A_{a,s}(\theta)}{B_{a,s}(\theta)},
+\]
+where $A_{a,s}$ and $B_{a,s}$ are polynomials of degree at most $\Delta$, and $B_{a,s}(\theta)>0$ on $\Theta$.
+\end{definition}
+
+The polynomial coefficients may depend arbitrarily on $a$ and $s$. Only the same $p$ parameters and the uniform degree bound are shared. Every subset of $\R^p$ has a countable dense subset, and the positive denominators make all transition probabilities continuous in the relative topology on $\Theta$. Thus these families satisfy the universal-separability condition in Theorem~\ref{thm:rho}.
+
+\begin{theorem}[Trajectory closure]
+\label{thm:closure}
+For a complexity-$(p,\Delta)$ family and trajectories of length at most $M$,
+\begin{equation}
+ \Pdim\bigl(\{(x,z)\mapsto q_\theta(z\mid x):\theta\in\Theta\}\bigr)
+ <2p\log_2(8eM\Delta).
+ \label{eq:pdim-bound}
+\end{equation}
+The bound is independent of $|\A|^M$. The same conclusion holds for a deterministic bounded stopping rule whose stopping time is observed as part of the trajectory.
+\end{theorem}
+
+\begin{proof}
+Fix an observed pair $(x,z)$ of length $m\leq M$. By \eqref{eq:path-density}, its candidate density is
+\[
+ q_\theta(z\mid x)=
+ \frac{\prod_{t=1}^m A_{z_t,xz_{<t}}(\theta)}
+ {\prod_{t=1}^m B_{z_t,xz_{<t}}(\theta)}.
+\]
+Both products have degree at most $m\Delta\leq M\Delta$. At a fixed subgraph threshold $r$, positivity of the denominator makes $q_\theta(z\mid x)>r$ equivalent to one polynomial inequality
+\begin{equation}
+ \prod_{t=1}^m A_{z_t,xz_{<t}}(\theta)
+ -r\prod_{t=1}^m B_{z_t,xz_{<t}}(\theta)>0.
+ \label{eq:polynomial-test}
+\end{equation}
+Its degree in the $p$ concept parameters is at most $M\Delta$. Suppose $v$ input-threshold pairs are pseudo-shattered. Substituting each pair into \eqref{eq:polynomial-test} gives $v$ polynomials in $p$ variables, each of degree at most $M\Delta$, whose sign assignments realize all $2^v$ dichotomies. If $v\geq p$, the Warren sign-pattern bound used to prove Theorem 2.2 of \citet{goldberg1995} gives
+\[
+ 2^v\leq\left(\frac{8eM\Delta v}{p}\right)^p.
+\]
+Writing $a=v/p$, this inequality is impossible for $a\geq2\log_2(8eM\Delta)$. The claimed bound also exceeds $p$, so it covers $v<p$. Restricting the parameter domain cannot increase the number of sign patterns. A path observed under a deterministic stopping rule uses the same argument with $m\leq M$.
+\end{proof}
+
+Combining Theorems~\ref{thm:rho} and \ref{thm:closure} gives the main general guarantee.
+
+\begin{corollary}[Rational autoregressive oracle]
+\label{cor:rational}
+Let $V_{p,M,\Delta}=\lceil2p\log_2(8eM\Delta)\rceil$. A complexity-$(p,\Delta)$ family admits a conditional $\rho$-estimator satisfying \eqref{eq:rho-oracle} with $V=V_{p,M,\Delta}$. In the realizable case, integrated squared-Hellinger error at most $\epsilon$ holds with probability $1-\delta$ whenever
+\begin{equation}
+ n\geq\frac{C}{\epsilon}\left[V_{p,M,\Delta}\log\!\left(\frac C\epsilon\right)+\log\!\left(\frac1\delta\right)\right].
+ \label{eq:sample-rational}
+\end{equation}
+\end{corollary}
+
+The result is most useful when $|\A|^M$ is far larger than $p$. It also separates parameter sharing from horizon. Allowing unrelated parameters at every step would replace $p$ by a horizon-dependent parameter count before applying the theorem.
+
+\section{The Logistic Open Problem}
+\label{sec:logistic}
+
+For the class in \eqref{eq:logistic-class}, set $u_j=e^{w_j}>0$ and $u^y=\prod_{j=1}^d u_j^{y_j}$ for $y\in\{0,1\}^d$. Then
+\begin{equation}
+ g_u(1\mid y)=\frac{u^y}{1+u^y},
+ \qquad
+ g_u(0\mid y)=\frac1{1+u^y}.
+ \label{eq:logistic-rational}
+\end{equation}
+These are rational functions of $p=d$ positive parameters with degree $\Delta=d$.
+
+\begin{theorem}[Near-parametric stochastic logistic CoT]
+\label{thm:logistic}
+For every $d,M\geq1$, every prompt distribution, every $w^\star\in\R^d$, and $\epsilon,\delta\in(0,1/2)$, there is an information-theoretic proper CoT learner outputting $g_{\widehat w}\in\mathcal F_\sigma(d)$ such that, with probability at least $1-\delta$,
+\begin{align}
+ \E_X\h^2(P^M_{w^\star,X},P^M_{\widehat w,X})&\leq\epsilon,
+ \label{eq:trajectory-h}\\
+ \E_X\bigl(q^M_{w^\star}(X)-q^M_{\widehat w}(X)\bigr)^2&\leq2\epsilon,
+ \label{eq:final-square}
+\end{align}
+The required sample size satisfies
+\begin{equation}
+ n\leq \frac{C}{\epsilon}\left[d\log(2Md)\log\!\left(\frac C\epsilon\right)+\log\!\left(\frac1\delta\right)\right]
+ \label{eq:logistic-rate}
+\end{equation}
+up to increasing the universal constant. Here $q^M_w(x)$ is the probability that the final generated token equals one.
+\end{theorem}
+
+\begin{proof}
+Equation~\eqref{eq:logistic-rational} and Theorem~\ref{thm:closure} give $V<2d\log_2(8eMd)$. Positive rational $u$ vectors form a pointwise-dense countable subclass, so the estimator can output a member of the original logistic family. Corollary~\ref{cor:rational} gives \eqref{eq:trajectory-h}. Mapping a trajectory to its final token cannot increase Hellinger distance. For Bernoulli laws, $(p-q)^2=\TV^2(\operatorname{Bern}(p),\operatorname{Bern}(q))\leq2\h^2(\operatorname{Bern}(p),\operatorname{Bern}(q))$. This proves \eqref{eq:final-square}.
+\end{proof}
+
+The first conclusion also improves trajectory sampling. Since $\TV(P,Q)\leq\sqrt{2}\h(P,Q)$, Jensen's inequality gives $\E_X\TV(P^M_{w^\star,X},P^M_{\widehat w,X})\leq\epsilon$ after replacing the Hellinger target in \eqref{eq:logistic-rate} by $\epsilon^2$. This improves the $d^2$ parameter dependence in the unrestricted-weight sampling corollary of \citet{doron2026stochastic}.
+
+The linear dependence on $d$ cannot be improved.
+
+\begin{theorem}[Minimax parameter lower bound]
+\label{thm:lower}
+There are universal $c,c_0>0$ such that, for $0<\epsilon<c_0$ and $0<\delta<1/4$, any learner, including an improper learner, that guarantees final-token squared error at most $\epsilon$ with probability at least $1-\delta$ for $\mathcal F_\sigma(d)$ must use
+\begin{equation}
+ n\geq c\frac{d+\log(1/\delta)}{\epsilon}
+ \label{eq:lower-rate}
+\end{equation}
+in the worst case. The bound already holds at horizon $M=1$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Choose $d$ prompts whose tail vectors are the coordinate vectors $e_1,\ldots,e_d$, and draw them uniformly. For a codeword $\omega\in\{-1,+1\}^d$, choose $w_j=\omega_j\gamma$ so that $\sigma(\gamma)=1/2+\alpha$. A Varshamov--Gilbert subset has $\exp(cd)$ codewords at pairwise Hamming distance at least $d/4$. Their regression functions have pairwise squared $L_2$ distance at least $\alpha^2$. One observation has KL divergence at most $C\alpha^2$ between any two models. Taking $\alpha^2=C_0\epsilon$ and applying Fano's inequality \citep[Chapter 2]{tsybakov2009} proves $n=\Omega(d/\epsilon)$. The two-point testing bound with one prompt gives $\Omega(\log(1/\delta)/\epsilon)$. Appendix D of the supplement supplies constants and the reduction from estimation to decoding.
+\end{proof}
+
+\section{Extensions}
+\label{sec:extensions}
+
+The same argument selects among rational families rather than requiring one family to be fixed in advance.
+
+\begin{theorem}[Adaptive rational oracle]
+\label{thm:adaptive}
+Let $(\Q_j)_{j\in\mathcal J}$ be a countable collection of complexity-$(p_j,\Delta_j)$ trajectory families, and let
+\[
+ V_j=\left\lceil2p_j\log_2(8eM\Delta_j)\right\rceil.
+\]
+Choose weights $\Gamma_j\geq0$ satisfying $\sum_{j\in\mathcal J}e^{-\Gamma_j}\leq1$. There is one proper penalized conditional $\rho$-estimator $\widehat q$ such that, with probability at least $1-\delta$,
+\begin{align}
+ \E_X\h^2(P_X,\widehat q_X)
+ \leq C\inf_{j\in\mathcal J}\bigg\{&\inf_{q\in\Q_j}\E_X\h^2(P_X,q_X)\nonumber\\
+ &+\frac{(V_j\wedge n)[1+\log_+(n/V_j)]}{n}\nonumber\\
+ &+\frac{\Gamma_j+\log(1/\delta)}{n}\bigg\}.
+ \label{eq:adaptive-oracle}
+\end{align}
+The estimator can be selected from the union of fixed countable pointwise-dense subclasses of the models.
+\end{theorem}
+
+\begin{proof}
+Use Theorem~\ref{thm:closure} to bound the VC-subgraph index of each model by $V_j$. The penalized $\rho$-estimation theorem of \citet{baraud2018}, with the Kraft weights $\Gamma_j$, gives \eqref{eq:adaptive-oracle}. Its conditional construction removes the common unknown prompt marginal exactly as in Theorem~\ref{thm:rho}. A first approximate minimizer in the enumerated union gives the proper measurable selection.
+\end{proof}
+
+\paragraph{Misspecification and contamination.} Theorem~\ref{thm:rho} does not assume that the true trajectory law is autoregressive or logistic. For the logistic class, its right side contains the best integrated trajectory-Hellinger approximation error plus the complexity term in \eqref{eq:logistic-rate}. This is a constant-factor oracle, unlike next-token log loss under general misspecification \citep{rohatgi2025}. Under i.i.d. Huber contamination at rate $\eta$, squared Hellinger distance from the clean joint law is at most its total variation distance, which is at most $\eta$. The same oracle argument adds $O(\eta)$.
+
+\begin{corollary}[Clean risk under Huber contamination]
+\label{cor:huber}
+Suppose the clean joint law $P$ has conditional density $q^\star\in\Q$, but the observations are i.i.d. from $R=(1-\eta)P+\eta H$ for an arbitrary joint law $H$. If $\mu_P$ is the clean prompt marginal, the estimator in Theorem~\ref{thm:rho} satisfies, with probability at least $1-\delta$,
+\begin{align*}
+ \E_{X\sim\mu_P}\h^2(P_X,\widehat q_X)
+ \leq C\bigg\{\eta
+ &+\frac{(V\wedge n)[1+\log_+(n/V)]}{n}\\
+ &+\frac{\log(1/\delta)}{n}\bigg\}.
+\end{align*}
+The contaminating law may change the prompt marginal. The supplement proves the claim by comparing the clean, contaminated, and candidate joint laws.
+\end{corollary}
+
+\paragraph{Sparse logistic memory.} Suppose only $s$ of the $d$ lag coordinates have nonzero weights, with unknown support. A fixed support has $p=\Delta=s$ and trajectory pseudo-dimension $O(s\log(2Ms))$. Applying Theorem~\ref{thm:adaptive} to supports adds $\log\binom ds\leq s\log(ed/s)$. One estimator therefore satisfies, simultaneously for all supports, the realizable rate
+\begin{equation}
+ \widetilde O\!\left(
+ \frac{s\log(2Ms)+s\log(ed/s)+\log(1/\delta)}{n}
+ \right).
+ \label{eq:sparse-rate}
+\end{equation}
+No sparsity level or weight bound is supplied to the learner. The full oracle inequality appears in Appendix E of the supplement.
+
+\paragraph{Multiclass softmax.} Let $y(s)\in\{0,1\}^d$ and use $K-1$ free logit vectors relative to a reference token. With $u_{a,j}=e^{w_{a,j}}$,
+\[
+ g_u(a\mid s)=\frac{u_a^{y(s)}}{1+\sum_{b=1}^{K-1}u_b^{y(s)}}
+\]
+for $a\neq0$, while the reference numerator is one. This is a rational family with $p=(K-1)d$ and $\Delta=d$. Corollary~\ref{cor:rational} gives a trajectory rate
+\[
+ \widetilde O\!\left(\frac{(K-1)d\log(2Md)+\log(1/\delta)}{n}\right).
+\]
+The response space has size $K^M$, but it does not enter separately. The same statement covers any finite alphabet and positive rational shared-parameter transition rule.
+
+\section{Scope and Discussion}
+
+The observed path is essential. Under CoT supervision, its likelihood is one product and clearing denominators gives degree $Md$. Under e2e supervision, the final-token probability sums every latent path first. For the logistic delay line, the known proof uses a common denominator over all $2^d$ memory states, whose degree is exponential in $d$ before the semialgebraic bound is applied \citep{doron2026stochastic}. Our argument does not reduce the e2e $d^2$ bound and does not claim to resolve that half of the open question.
+
+The estimator is also not a replacement for the existing efficient CoT learner. The $\rho$ objective is a minimax comparison over an infinite model, and its bounded transform of a trajectory likelihood ratio is generally nonconvex in logistic parameters. The result identifies the information-theoretic rate and shows that the extra factor of $d$ is not statistically necessary. Finding an efficient proper learner at the same rate is a separate computational question.
+
+More broadly, Theorem~\ref{thm:closure} isolates why shared parameters can defeat an exponential trajectory alphabet. Products increase algebraic degree linearly, while semialgebraic sign complexity depends only logarithmically on degree. Conditional $\rho$-estimation converts that structural fact into a distribution-free fast rate without margins, bounded logits, or a known prompt distribution.
+
+\balance
+\bibliography{references}
+
+\clearpage
+\end{document}

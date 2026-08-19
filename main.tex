@@ -33,12 +33,7 @@
 \aistatsaddress{Johns Hopkins University}
 ]
 \begin{abstract}
-A length-$M$ autoregressive trajectory has $|\A|^M$ possible values, and generic conditional-density bounds can inherit this large response space. We show that shared algebraic parameters prevent this trajectory-alphabet explosion under full chain-of-thought supervision. If every next-token probability is a positive rational function of $p$ shared real parameters, with numerator and denominator degree at most $\Delta$, then the class of complete trajectory densities has pseudo-dimension at most $2p\log_2(8eM\Delta)$. Conditional $\rho$-estimation therefore gives a proper distribution-free learner with integrated squared-Hellinger error
-\[
- O\!\left(\frac{p\log(2M\Delta)\log(en/p)}{n}
- +\frac{\log(1/\delta)}{n}\right),
-\]
-without knowing the prompt distribution and without any lower bound on token probabilities. For the unrestricted $d$-dimensional logistic delay line introduced in recent stochastic autoregressive learning, this yields $\widetilde O((d+\log(1/\delta))/\epsilon)$ full trajectories for both final-token squared error and trajectory squared-Hellinger error. The previous bound was roughly $\widetilde O(d^2\log M/\epsilon)$, and obtaining the natural $d$-dimensional rate for arbitrary horizons was left open. A horizon-one packing proves $\Omega((d+\log(1/\delta))/\epsilon)$, so the parameter dependence is optimal up to logarithms. The same method gives constant-factor misspecification oracles, sparse adaptation, bounded-length stopping, and multiclass softmax rates linear in the number of free parameters. The argument does not improve end-to-end supervision, where unobserved paths must be summed before forming a density.
+A length-$M$ autoregressive trajectory has $|\A|^M$ possible values, and generic conditional-density bounds can inherit this large response space. We show that shared algebraic parameters prevent this trajectory-alphabet explosion under full chain-of-thought supervision. If every next-token probability is a positive rational function of $p$ shared real parameters, with numerator and denominator degree at most $\Delta$, then the class of complete trajectory densities has pseudo-dimension at most $2p\log_2(8eM\Delta)$. Conditional $\rho$-estimation therefore gives a proper distribution-free learner with integrated squared-Hellinger error \[ O\!\left(\frac{p\log(2M\Delta)\log(en/p)}{n} +\frac{\log(1/\delta)}{n}\right), \] without knowing the prompt distribution and without any lower bound on token probabilities. For the unrestricted $d$-dimensional logistic delay line introduced in recent stochastic autoregressive learning, this yields $\widetilde O((d+\log(1/\delta))/\epsilon)$ full trajectories for both final-token squared error and trajectory squared-Hellinger error. The previous bound was roughly $\widetilde O(d^2\log M/\epsilon)$, and obtaining the natural $d$-dimensional rate for arbitrary horizons was left open. A horizon-one packing proves $\Omega((d+\log(1/\delta))/\epsilon)$, so the parameter dependence is optimal up to logarithms. The same method gives constant-factor misspecification oracles, sparse adaptation, bounded-length stopping, and multiclass softmax rates linear in the number of free parameters. The argument does not improve end-to-end supervision, where unobserved paths must be summed before forming a density.
 \end{abstract}
 
 \section{Introduction}
@@ -61,8 +56,7 @@ Low pseudo-dimension alone does not make ordinary bounded regression applicable 
 \caption{Distribution-free rates with secondary logarithms suppressed. The e2e row receives only the final token during training.}
 \label{tab:rates}
 \centering
-\small
-\setlength{\tabcolsep}{9pt}
+\small \setlength{\tabcolsep}{9pt}
 \begin{tabular}{llll}
 \toprule
 Supervision & Parameter set & Output & Samples for squared error $\epsilon$ \\
@@ -95,11 +89,7 @@ Let $\mathcal X$ be an arbitrary measurable prompt space and let $\A$ be a finit
 \end{equation}
 for its conditional trajectory density with respect to counting measure on $\A^M$.
 
-We observe $n$ independent pairs $(X_i,Z_i)$. The prompt marginal $\mu$ is arbitrary and unknown. The true conditional trajectory law is $P_x$, which need not belong to the candidate family $\Q=\{q_\theta:\theta\in\Theta\}$. We use squared Hellinger distance normalized as
-\[
- \h^2(P,Q)=\frac12\sum_z\bigl(\sqrt{P(z)}-\sqrt{Q(z)}\bigr)^2.
-\]
-The target loss is $\E_{X\sim\mu}\h^2(P_X,q_{\widehat\theta}(\cdot\mid X))$.
+We observe $n$ independent pairs $(X_i,Z_i)$. The prompt marginal $\mu$ is arbitrary and unknown. The true conditional trajectory law is $P_x$, which need not belong to the candidate family $\Q=\{q_\theta:\theta\in\Theta\}$. We use squared Hellinger distance normalized as \[ \h^2(P,Q)=\frac12\sum_z\bigl(\sqrt{P(z)}-\sqrt{Q(z)}\bigr)^2. \] The target loss is $\E_{X\sim\mu}\h^2(P_X,q_{\widehat\theta}(\cdot\mid X))$.
 
 For completeness, consider the bounded increasing function $\psi(r)=(r-1)/(r+1)$. On a countable candidate family define
 \begin{equation}
@@ -132,11 +122,7 @@ We now bound the only model-dependent quantity in Theorem~\ref{thm:rho}.
 
 \begin{definition}[Rational transition family]
 \label{def:rational}
-A generator family has complexity $(p,\Delta)$, for positive integers $p$ and $\Delta$, if there is an injective parameterization by a domain $\Theta\subseteq\R^p$ such that, for every state $s$ and token $a$,
-\[
- g_\theta(a\mid s)=\frac{A_{a,s}(\theta)}{B_{a,s}(\theta)},
-\]
-where $A_{a,s}$ and $B_{a,s}$ are polynomials of degree at most $\Delta$, and $B_{a,s}(\theta)>0$ on $\Theta$.
+A generator family has complexity $(p,\Delta)$, for positive integers $p$ and $\Delta$, if there is an injective parameterization by a domain $\Theta\subseteq\R^p$ such that, for every state $s$ and token $a$, \[ g_\theta(a\mid s)=\frac{A_{a,s}(\theta)}{B_{a,s}(\theta)}, \] where $A_{a,s}$ and $B_{a,s}$ are polynomials of degree at most $\Delta$, and $B_{a,s}(\theta)>0$ on $\Theta$.
 \end{definition}
 
 The polynomial coefficients may depend arbitrarily on $a$ and $s$. Only the same $p$ parameters and the uniform degree bound are shared. Every subset of $\R^p$ has a countable dense subset, and the positive denominators make all transition probabilities continuous in the relative topology on $\Theta$. Thus these families satisfy the universal-separability condition in Theorem~\ref{thm:rho}.
@@ -153,23 +139,13 @@ The bound is independent of $|\A|^M$. The same conclusion holds for a determinis
 \end{theorem}
 
 \begin{proof}
-Fix an observed pair $(x,z)$ of length $m\leq M$. By \eqref{eq:path-density}, its candidate density is
-\[
- q_\theta(z\mid x)=
- \frac{\prod_{t=1}^m A_{z_t,xz_{<t}}(\theta)}
- {\prod_{t=1}^m B_{z_t,xz_{<t}}(\theta)}.
-\]
-Both products have degree at most $m\Delta\leq M\Delta$. At a fixed subgraph threshold $r$, positivity of the denominator makes $q_\theta(z\mid x)>r$ equivalent to one polynomial inequality
+Fix an observed pair $(x,z)$ of length $m\leq M$. By \eqref{eq:path-density}, its candidate density is \[ q_\theta(z\mid x)= \frac{\prod_{t=1}^m A_{z_t,xz_{<t}}(\theta)} {\prod_{t=1}^m B_{z_t,xz_{<t}}(\theta)}. \] Both products have degree at most $m\Delta\leq M\Delta$. At a fixed subgraph threshold $r$, positivity of the denominator makes $q_\theta(z\mid x)>r$ equivalent to one polynomial inequality
 \begin{equation}
  \prod_{t=1}^m A_{z_t,xz_{<t}}(\theta)
  -r\prod_{t=1}^m B_{z_t,xz_{<t}}(\theta)>0.
  \label{eq:polynomial-test}
 \end{equation}
-Its degree in the $p$ concept parameters is at most $M\Delta$. Suppose $v$ input-threshold pairs are pseudo-shattered. Substituting each pair into \eqref{eq:polynomial-test} gives $v$ polynomials in $p$ variables, each of degree at most $M\Delta$, whose sign assignments realize all $2^v$ dichotomies. If $v\geq p$, the Warren sign-pattern bound used to prove Theorem 2.2 of \citet{goldberg1995} gives
-\[
- 2^v\leq\left(\frac{8eM\Delta v}{p}\right)^p.
-\]
-Writing $a=v/p$, this inequality is impossible for $a\geq2\log_2(8eM\Delta)$. The claimed bound also exceeds $p$, so it covers $v<p$. Restricting the parameter domain cannot increase the number of sign patterns. A path observed under a deterministic stopping rule uses the same argument with $m\leq M$.
+Its degree in the $p$ concept parameters is at most $M\Delta$. Suppose $v$ input-threshold pairs are pseudo-shattered. Substituting each pair into \eqref{eq:polynomial-test} gives $v$ polynomials in $p$ variables, each of degree at most $M\Delta$, whose sign assignments realize all $2^v$ dichotomies. If $v\geq p$, the Warren sign-pattern bound used to prove Theorem 2.2 of \citet{goldberg1995} gives \[ 2^v\leq\left(\frac{8eM\Delta v}{p}\right)^p. \] Writing $a=v/p$, this inequality is impossible for $a\geq2\log_2(8eM\Delta)$. The claimed bound also exceeds $p$, so it covers $v<p$. Restricting the parameter domain cannot increase the number of sign patterns. A path observed under a deterministic stopping rule uses the same argument with $m\leq M$.
 \end{proof}
 
 Combining Theorems~\ref{thm:rho} and \ref{thm:closure} gives the main general guarantee.
@@ -243,11 +219,7 @@ The same argument selects among rational families rather than requiring one fami
 
 \begin{theorem}[Adaptive rational oracle]
 \label{thm:adaptive}
-Let $(\Q_j)_{j\in\mathcal J}$ be a countable collection of complexity-$(p_j,\Delta_j)$ trajectory families, and let
-\[
- V_j=\left\lceil2p_j\log_2(8eM\Delta_j)\right\rceil.
-\]
-Choose weights $\Gamma_j\geq0$ satisfying $\sum_{j\in\mathcal J}e^{-\Gamma_j}\leq1$. There is one proper penalized conditional $\rho$-estimator $\widehat q$ such that, with probability at least $1-\delta$,
+Let $(\Q_j)_{j\in\mathcal J}$ be a countable collection of complexity-$(p_j,\Delta_j)$ trajectory families, and let \[ V_j=\left\lceil2p_j\log_2(8eM\Delta_j)\right\rceil. \] Choose weights $\Gamma_j\geq0$ satisfying $\sum_{j\in\mathcal J}e^{-\Gamma_j}\leq1$. There is one proper penalized conditional $\rho$-estimator $\widehat q$ such that, with probability at least $1-\delta$,
 \begin{align}
  \E_X\h^2(P_X,\widehat q_X)
  \leq C\inf_{j\in\mathcal J}\bigg\{&\inf_{q\in\Q_j}\E_X\h^2(P_X,q_X)\nonumber\\
@@ -286,14 +258,7 @@ The contaminating law may change the prompt marginal. The supplement proves the 
 No sparsity level or weight bound is supplied to the learner. The full oracle inequality appears in Appendix E of the supplement.
 
 \paragraph{Multiclass softmax.} Let $y(s)\in\{0,1\}^d$ and use $K-1$ free logit vectors relative to a reference token. With $u_{a,j}=e^{w_{a,j}}$,
-\[
- g_u(a\mid s)=\frac{u_a^{y(s)}}{1+\sum_{b=1}^{K-1}u_b^{y(s)}}
-\]
-for $a\neq0$, while the reference numerator is one. This is a rational family with $p=(K-1)d$ and $\Delta=d$. Corollary~\ref{cor:rational} gives a trajectory rate
-\[
- \widetilde O\!\left(\frac{(K-1)d\log(2Md)+\log(1/\delta)}{n}\right).
-\]
-The response space has size $K^M$, but it does not enter separately. The same statement covers any finite alphabet and positive rational shared-parameter transition rule.
+\[ g_u(a\mid s)=\frac{u_a^{y(s)}}{1+\sum_{b=1}^{K-1}u_b^{y(s)}} \] for $a\neq0$, while the reference numerator is one. This is a rational family with $p=(K-1)d$ and $\Delta=d$. Corollary~\ref{cor:rational} gives a trajectory rate \[ \widetilde O\!\left(\frac{(K-1)d\log(2Md)+\log(1/\delta)}{n}\right). \] The response space has size $K^M$, but it does not enter separately. The same statement covers any finite alphabet and positive rational shared-parameter transition rule.
 
 \section{Scope and Discussion}
 
